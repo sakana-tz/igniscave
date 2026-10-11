@@ -1,0 +1,614 @@
+.square-wrap {
+  position: relative;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.square-container {
+  --gold-core: rgba(255, 215, 0, 0.9);
+  --gold-mid: rgba(255, 193, 7, 0.62);
+  --gold-outer: rgba(245, 197, 66, 0.3);
+  --gold-fade: rgba(218, 165, 32, 0);
+
+  position: relative;
+  padding: 40px 32px 60px;
+  min-height: calc(100vh - 120px);
+  border-radius: 28px;
+  overflow: hidden;
+  background: linear-gradient(170deg, #8fd6f2 0%, #3aaee0 40%, #1c7eb5 100%);
+  box-shadow: inset 0 0 80px rgba(0, 40, 80, 0.4), 0 20px 50px -20px rgba(0, 0, 0, 0.4);
+}
+
+/* 搜索栏悬浮层：浮在浴池水面上，z 低于卡片但可见，不拦截卡片运动。
+   top 需对齐外部正常文档流中 .page-head 的高度（h1 36px + 6px + subtitle ~17px + margin 20px ≈ 79px） */
+.float-ui {
+  position: absolute;
+  top: 84px;
+  left: 32px;
+  right: 32px;
+  z-index: 5;
+  pointer-events: none;
+}
+.float-ui input,
+.float-ui button,
+.float-ui a,
+.float-ui select {
+  pointer-events: auto;
+}
+
+.page-head {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.page-head h1 {
+  margin: 0 0 6px;
+  font-size: 30px;
+  color: #f5c542;
+}
+
+.subtitle {
+  margin: 0;
+  color: #000;
+  font-size: 14px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 18px; /* 搜索栏+按钮整体下移 */
+}
+
+.search-box {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  min-width: 260px;
+}
+
+.toolbar-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.search-input {
+  flex: 1;
+  max-width: 360px;
+  padding: 9px 14px;
+  border: 1px solid #dcdfea;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background: #fff;
+  color: #333;
+}
+
+.search-input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+.btn {
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: 1px solid #dcdfea;
+  background: #fff;
+  color: #555;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn:hover:not(:disabled) {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: #f5c542;
+  border: none;
+  color: #3a2a05;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #eab331;
+  color: #3a2a05;
+  border: none;
+}
+
+.btn-ghost {
+  background: transparent;
+}
+
+.search-tip {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 6px rgba(0, 40, 80, 0.45);
+}
+
+/* ============================================================
+   浴池视觉层：水面 / 焦散 / 雾气 / 浓金光（容器自身即浴池）
+   ============================================================ */
+.cv {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.cv.caustics { z-index: 0; opacity: 0.7; mix-blend-mode: screen; }
+.cv.water { z-index: 1; mix-blend-mode: overlay; opacity: 0.95; }
+.cv.mist { z-index: 9999; }
+
+.state-tip {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 16px;
+  z-index: 10001;
+  pointer-events: none;
+  text-shadow: 0 2px 8px rgba(0, 40, 80, 0.6);
+}
+
+.state-tip.error {
+  color: #ffd7d2;
+}
+
+/* 浓金光层：规律的金色斜条纹，柔和过渡与水面融合 */
+.golden-light {
+  position: absolute;
+  inset: 0;
+  z-index: 4; /* 低于工具栏 float-ui(5) 和卡片(10)，不遮挡工具栏与卡片 */
+  pointer-events: none;
+  overflow: hidden;
+  mix-blend-mode: normal;
+  filter: url(#water-ripple) blur(11px);
+  background: repeating-linear-gradient(
+    -22deg,
+    transparent 0,
+    transparent 28px,
+    rgba(245, 197, 66, 0) 34px,
+    rgba(245, 197, 66, 0.14) 44px,
+    rgba(245, 197, 66, 0.14) 50px,
+    rgba(245, 197, 66, 0) 60px,
+    transparent 66px
+  );
+  background-size: 66px 66px;
+  animation: stripeDrift 26s linear infinite;
+}
+
+@keyframes stripeDrift {
+  0%   { background-position: 0 0; }
+  100% { background-position: 86px 40px; }
+}
+
+/* 顶部金色环境光已按需求移除（浴场上部保持通透）
+.golden-light::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(
+    ellipse 95% 80% at 50% 8%,
+    rgba(255, 225, 140, 0.50) 0%,
+    rgba(255, 200, 90, 0.28) 38%,
+    rgba(240, 175, 55, 0.10) 62%,
+    rgba(220, 150, 30, 0) 80%
+  );
+  animation: ambientPulse 20s ease-in-out infinite;
+}
+*/
+
+@keyframes ambientPulse {
+  0%, 100% { opacity: 0.9; }
+  50%      { opacity: 1; }
+}
+
+.glow {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    var(--gold-core) 0%,
+    var(--gold-mid) 28%,
+    var(--gold-outer) 55%,
+    var(--gold-fade) 82%
+  );
+  filter: blur(14px);
+  animation: glowDrift 20s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes glowDrift {
+  /* 不做 opacity 动画：亮度由各 glow 自身的 opacity 控制（否则动画会覆盖基础值导致过亮） */
+  0%   { transform: scale(1) translate(0, 0); }
+  25%  { transform: scale(1.07) translate(1.6%, 0.9%); }
+  50%  { transform: scale(0.95) translate(-1.1%, 1.8%); }
+  75%  { transform: scale(1.04) translate(-1.6%, -0.9%); }
+  100% { transform: scale(1) translate(0, 0); }
+}
+
+/* 圆形光斑全部隐藏，改用规律条纹背景 */
+.glow-main,
+.glow-ul,
+.glow-ur,
+.glow-spark,
+.glow-ml,
+.glow-mr,
+.glow-bl,
+.glow-br,
+.glow-spark2 { display: none; }
+
+/* ============================================================
+   漂浮卡片
+   ============================================================ */
+.post-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  /* 宽度由引擎按浴场宽度动态下发（--cw-s/m/l/xl），字号随宽度等比，
+     内部尺寸/字号全部用 em，整体一起缩放 */
+  width: var(--cw, 140px);
+  font-size: calc(var(--cw, 140px) * 0.09286);
+  aspect-ratio: 3 / 4;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.98) 0%, #e0f4ff 100%);
+  border: 1px solid rgba(102, 126, 234, 0.18);
+  border-radius: 0.92em;
+  padding: 0.92em 0.92em 0.77em;
+  cursor: grab;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow:
+    0 12px 24px -8px rgba(10, 60, 100, 0.45),
+    0 4px 8px -2px rgba(10, 60, 100, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 0 -2px 6px rgba(0, 80, 140, 0.08);
+  transform-origin: 50% 50%;
+  will-change: transform;
+  user-select: none;
+  -webkit-user-select: none;
+  overflow: hidden;
+  touch-action: none;
+  transition: box-shadow 0.2s ease;
+}
+
+/* 卡片尺寸等级：宽度取引擎按浴场宽度下发的 CSS 变量，缺省回退到桌面基准
+   （s 140 / m 175 / l 210 / xl 245）；窄屏下各档差距同步压缩防止挤压 */
+.post-card.size-s  { --cw: var(--cw-s, 140px); }
+.post-card.size-m  { --cw: var(--cw-m, 175px); }
+.post-card.size-l  { --cw: var(--cw-l, 210px); }
+.post-card.size-xl { --cw: var(--cw-xl, 245px); }
+
+.post-card.dragging {
+  cursor: grabbing;
+  box-shadow: 0 24px 48px -12px rgba(10, 60, 100, 0.6);
+}
+
+.post-card::before {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px; right: 2px;
+  height: 45%;
+  z-index: 0;
+  border-radius: 14px 14px 50% 50% / 14px 14px 100% 100%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), transparent);
+  pointer-events: none;
+}
+
+/* 有封面的卡片：封面 img 直接作为整卡背景，标题/信息叠加在底部 */
+.post-card:has(.post-cover) {
+  aspect-ratio: 3 / 4;
+  padding: 0;
+  justify-content: flex-end;
+}
+
+.post-cover {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.post-cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* 禁止浏览器原生图片拖拽：否则在图片上按下会启动原生拖图，
+     拖拽期间 window 收不到 pointermove，导致卡片上半部分拖不动 */
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* 底部渐变遮罩：保证叠加在封面上的文字可读 */
+.post-card:has(.post-cover)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 36%,
+    rgba(0, 0, 0, 0.32) 60%,
+    rgba(0, 0, 0, 0.82) 100%
+  );
+}
+
+.post-card:has(.post-cover) .post-title,
+.post-card:has(.post-cover) .post-meta {
+  position: relative;
+  z-index: 2;
+  padding-left: 0.92em;
+  padding-right: 0.92em;
+  color: #fff;
+}
+
+.post-card:has(.post-cover) .post-title {
+  padding-top: 0;
+  -webkit-line-clamp: 2; /* 背景卡片上标题最多 2 行，给信息区留空间 */
+}
+
+.post-card:has(.post-cover) .post-meta {
+  padding-bottom: 0.77em;
+  padding-top: 0.46em;
+  margin-top: 0;
+  gap: 0.15em;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.post-card:has(.post-cover) .meta-item,
+.post-card:has(.post-cover) .meta-item.time {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.post-card:hover {
+  box-shadow: 0 18px 36px rgba(10, 60, 100, 0.5);
+  border-color: rgba(255, 215, 120, 0.6);
+}
+
+.post-title {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-size: 1em;
+  color: #2c2f3a;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.hot-flame {
+  margin-right: 0.3em;
+  font-size: 1.15em;
+}
+
+/* 草稿卡片：虚线边框 + 降低饱和，提示未发布 */
+.post-card.is-draft {
+  background: linear-gradient(160deg, #fdfdfd 0%, #f4f5f8 60%, #eceef3 100%);
+  border: 1px dashed #b6bccb;
+  box-shadow: 0 8px 18px rgba(10, 60, 100, 0.25);
+  opacity: 0.94;
+}
+
+.draft-tag {
+  display: inline-block;
+  margin-right: 0.38em;
+  padding: 0.08em 0.54em;
+  border-radius: 0.38em;
+  background: #eef0f5;
+  border: 1px solid #c9cedb;
+  color: #6b7185;
+  font-size: 0.85em;
+  font-weight: 500;
+  vertical-align: 0.15em;
+}
+
+.draft-badge {
+  position: absolute;
+  top: 0.62em;
+  left: 0.62em;
+  z-index: 2;
+  padding: 0.15em 0.7em;
+  border-radius: 0.38em;
+  background: rgba(40, 43, 56, 0.72);
+  color: #fff;
+  font-size: 0.85em;
+  letter-spacing: 0.08em;
+  backdrop-filter: blur(4px);
+}
+
+.post-meta {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.23em;
+  font-size: 0.77em;
+  color: #5a6478;
+  margin-top: 0.77em;
+  padding-top: 0.77em;
+  border-top: 1px dashed rgba(102, 126, 234, 0.22);
+}
+
+.meta-item.time {
+  color: #6b7185;
+}
+
+.pagination {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 22px;
+  z-index: 9; /* 低于卡片(z 10)，卡片漂过时不被分页挡住；按钮/下拉单独恢复 pointer-events */
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16px;
+  padding-left: 24px;
+  pointer-events: none;
+}
+
+.pagination .btn,
+.pagination select,
+.pagination input {
+  pointer-events: auto;
+}
+
+.page-num {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  color: #ffffff;
+  font-size: 14px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.page-num .page-info {
+  margin-left: -7px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.pagination .btn {
+  background: #f5c542;
+  border: none;
+  color: #3a2a05;
+}
+
+.pagination .btn:hover:not(:disabled) {
+  background: #eab331;
+  color: #3a2a05;
+  border: none;
+}
+
+.pagination .page-info {
+  color: #ffffff;
+  font-size: 14px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.page-input {
+  width: 5px;
+  min-width: 5px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: right;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  outline: none;
+  cursor: text;
+  transform: rotate(360deg);
+}
+
+.page-input:focus {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+/* 隐藏 number 输入框的上下箭头，保持简洁 */
+.page-input::-webkit-outer-spin-button,
+.page-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.page-input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+.page-size-input {
+  pointer-events: auto;
+  width: 48px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 6px;
+  padding: 4px 4px;
+  font-size: 13px;
+  color: #3a2a05;
+  outline: none;
+}
+.page-size-input:focus {
+  border-color: #eab331;
+}
+
+.page-size-input::-webkit-outer-spin-button,
+.page-size-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.page-size-input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+.page-size-label {
+  pointer-events: none;
+  font-size: 13px;
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.page-info {
+  font-size: 14px;
+  color: #666;
+  min-width: 70px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .square-container {
+    padding: 28px 18px 44px;
+    border-radius: 20px;
+    min-height: 420px; /* 手机端浴池不再撑满视口，按内容高度收缩 */
+  }
+
+  .float-ui {
+    top: 84px;
+    left: 18px;
+    right: 18px;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box {
+    min-width: 0;
+  }
+
+  /* 卡片宽度/字号由 JS 按浴池实际宽度动态下发（CSS 变量 --cw-*），不再写死断点值 */
+
+  .meta-item.time {
+    margin-left: 0;
+  }
+}
