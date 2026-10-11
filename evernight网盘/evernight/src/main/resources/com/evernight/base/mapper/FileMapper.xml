@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.evernight.base.mapper.FileMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="com.evernight.base.entity.po.File">
+		<!--文件ID-->
+		<id column="file_id" property="fileId"  />
+		<!--所属用户ID-->
+		<result column="user_id" property="userId"  />
+		<!--文件名-->
+		<result column="file_name" property="fileName"  />
+		<!--存储路径-->
+		<result column="file_path" property="filePath"  />
+		<!--文件类型-->
+		<result column="file_type" property="fileType"  />
+		<!--文件大小(字节)-->
+		<result column="file_size" property="fileSize"  />
+		<!--文件哈希(用于秒传)-->
+		<result column="file_hash" property="fileHash"  />
+		<!--是否删除(0:正常,1:已删除)-->
+		<result column="is_deleted" property="isDeleted"  />
+		<!--创建时间-->
+		<result column="created_time" property="createdTime"  />
+		<!--更新时间-->
+		<result column="updated_time" property="updatedTime"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 f.file_id,f.user_id,f.file_name,f.file_path,f.file_type,
+		 f.file_size,f.file_hash,f.is_deleted,f.created_time,f.updated_time
+		 
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.fileId != null">
+				 and  f.file_id = #{query.fileId}
+			</if>
+			<if test="query.userId != null">
+				 and  f.user_id = #{query.userId}
+			</if>
+			<if test="query.fileName != null and query.fileName!=''">
+				 and  f.file_name = #{query.fileName}
+			</if>
+			<if test="query.filePath != null and query.filePath!=''">
+				 and  f.file_path = #{query.filePath}
+			</if>
+			<if test="query.fileType != null and query.fileType!=''">
+				 and  f.file_type = #{query.fileType}
+			</if>
+			<if test="query.fileSize != null">
+				 and  f.file_size = #{query.fileSize}
+			</if>
+			<if test="query.fileHash != null and query.fileHash!=''">
+				 and  f.file_hash = #{query.fileHash}
+			</if>
+			<if test="query.isDeleted != null">
+				 and  f.is_deleted = #{query.isDeleted}
+			</if>
+			<if test="query.createdTime != null">
+				 and  f.created_time = #{query.createdTime}
+			</if>
+			<if test="query.updatedTime != null">
+				 and  f.updated_time = #{query.updatedTime}
+			</if>
+	</sql>
+	<!-- 通用条件列-->
+	<sql id="base_condition">
+	 <where>
+		 <include refid="base_condition_filed" />
+	 </where>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.fileNameFuzzy!= null  and query.fileNameFuzzy!=''">
+				 and  f.file_name like concat('%', #{query.fileNameFuzzy}, '%')
+			</if>
+			<if test="query.filePathFuzzy!= null  and query.filePathFuzzy!=''">
+				 and  f.file_path like concat('%', #{query.filePathFuzzy}, '%')
+			</if>
+			<if test="query.fileTypeFuzzy!= null  and query.fileTypeFuzzy!=''">
+				 and  f.file_type like concat('%', #{query.fileTypeFuzzy}, '%')
+			</if>
+			<if test="query.fileHashFuzzy!= null  and query.fileHashFuzzy!=''">
+				 and  f.file_hash like concat('%', #{query.fileHashFuzzy}, '%')
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM file f <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM file f <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="com.evernight.base.entity.po.File">
+		<selectKey keyProperty="bean.fileId" resultType="Long" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		 INSERT INTO file
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.fileName != null">
+				 file_name,
+			</if>
+			<if test="bean.filePath != null">
+				 file_path,
+			</if>
+			<if test="bean.fileType != null">
+				 file_type,
+			</if>
+			<if test="bean.fileSize != null">
+				 file_size,
+			</if>
+			<if test="bean.fileHash != null">
+				 file_hash,
+			</if>
+			<if test="bean.isDeleted != null">
+				 is_deleted,
+			</if>
+			<if test="bean.createdTime != null">
+				 created_time,
+			</if>
+			<if test="bean.updatedTime != null">
+				 updated_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.fileName!=null">
+				 #{bean.fileName},
+			</if>
+			<if test="bean.filePath!=null">
+				 #{bean.filePath},
+			</if>
+			<if test="bean.fileType!=null">
+				 #{bean.fileType},
+			</if>
+			<if test="bean.fileSize!=null">
+				 #{bean.fileSize},
+			</if>
+			<if test="bean.fileHash!=null">
+				 #{bean.fileHash},
+			</if>
+			<if test="bean.isDeleted!=null">
+				 #{bean.isDeleted},
+			</if>
+			<if test="bean.createdTime!=null">
+				 #{bean.createdTime},
+			</if>
+			<if test="bean.updatedTime!=null">
+				 #{bean.updatedTime},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="com.evernight.base.entity.po.File">
+		 INSERT INTO file
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.fileId != null">
+				 file_id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.fileName != null">
+				 file_name,
+			</if>
+			<if test="bean.filePath != null">
+				 file_path,
+			</if>
+			<if test="bean.fileType != null">
+				 file_type,
+			</if>
+			<if test="bean.fileSize != null">
+				 file_size,
+			</if>
+			<if test="bean.fileHash != null">
+				 file_hash,
+			</if>
+			<if test="bean.isDeleted != null">
+				 is_deleted,
+			</if>
+			<if test="bean.createdTime != null">
+				 created_time,
+			</if>
+			<if test="bean.updatedTime != null">
+				 updated_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.fileId!=null">
+				 #{bean.fileId},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.fileName!=null">
+				 #{bean.fileName},
+			</if>
+			<if test="bean.filePath!=null">
+				 #{bean.filePath},
+			</if>
+			<if test="bean.fileType!=null">
+				 #{bean.fileType},
+			</if>
+			<if test="bean.fileSize!=null">
+				 #{bean.fileSize},
+			</if>
+			<if test="bean.fileHash!=null">
+				 #{bean.fileHash},
+			</if>
+			<if test="bean.isDeleted!=null">
+				 #{bean.isDeleted},
+			</if>
+			<if test="bean.createdTime!=null">
+				 #{bean.createdTime},
+			</if>
+			<if test="bean.updatedTime!=null">
+				 #{bean.updatedTime},
+			</if>
+		 </trim>
+		 on DUPLICATE key update 
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.userId!=null">
+				 user_id = VALUES(user_id),
+			</if>
+			<if test="bean.fileName!=null">
+				 file_name = VALUES(file_name),
+			</if>
+			<if test="bean.filePath!=null">
+				 file_path = VALUES(file_path),
+			</if>
+			<if test="bean.fileType!=null">
+				 file_type = VALUES(file_type),
+			</if>
+			<if test="bean.fileSize!=null">
+				 file_size = VALUES(file_size),
+			</if>
+			<if test="bean.fileHash!=null">
+				 file_hash = VALUES(file_hash),
+			</if>
+			<if test="bean.isDeleted!=null">
+				 is_deleted = VALUES(is_deleted),
+			</if>
+			<if test="bean.createdTime!=null">
+				 created_time = VALUES(created_time),
+			</if>
+			<if test="bean.updatedTime!=null">
+				 updated_time = VALUES(updated_time),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="com.evernight.base.entity.po.File" useGeneratedKeys="true" keyProperty="fileId">
+		 INSERT INTO file(
+			 user_id,
+			 file_name,
+			 file_path,
+			 file_type,
+			 file_size,
+			 file_hash,
+			 is_deleted,
+			 created_time,
+			 updated_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.userId},
+				 #{item.fileName},
+				 #{item.filePath},
+				 #{item.fileType},
+				 #{item.fileSize},
+				 #{item.fileHash},
+				 #{item.isDeleted},
+				 #{item.createdTime},
+				 #{item.updatedTime}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="com.evernight.base.entity.po.File">
+		 INSERT INTO file(
+			 user_id,
+			 file_name,
+			 file_path,
+			 file_type,
+			 file_size,
+			 file_hash,
+			 is_deleted,
+			 created_time,
+			 updated_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.userId},
+				 #{item.fileName},
+				 #{item.filePath},
+				 #{item.fileType},
+				 #{item.fileSize},
+				 #{item.fileHash},
+				 #{item.isDeleted},
+				 #{item.createdTime},
+				 #{item.updatedTime}
+			 )
+		 </foreach>
+			on DUPLICATE key update 
+			user_id = VALUES(user_id),
+			file_name = VALUES(file_name),
+			file_path = VALUES(file_path),
+			file_type = VALUES(file_type),
+			file_size = VALUES(file_size),
+			file_hash = VALUES(file_hash),
+			is_deleted = VALUES(is_deleted),
+			created_time = VALUES(created_time),
+			updated_time = VALUES(updated_time)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="com.evernight.base.entity.query.FileQuery">
+		 UPDATE file f
+ 		 <set> 
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.fileName != null">
+				 file_name = #{bean.fileName},
+			</if>
+			<if test="bean.filePath != null">
+				 file_path = #{bean.filePath},
+			</if>
+			<if test="bean.fileType != null">
+				 file_type = #{bean.fileType},
+			</if>
+			<if test="bean.fileSize != null">
+				 file_size = #{bean.fileSize},
+			</if>
+			<if test="bean.fileHash != null">
+				 file_hash = #{bean.fileHash},
+			</if>
+			<if test="bean.isDeleted != null">
+				 is_deleted = #{bean.isDeleted},
+			</if>
+			<if test="bean.createdTime != null">
+				 created_time = #{bean.createdTime},
+			</if>
+			<if test="bean.updatedTime != null">
+				 updated_time = #{bean.updatedTime},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete f from file f
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据FileId修改-->
+	<update id="updateByFileId" parameterType="com.evernight.base.entity.po.File">
+		 UPDATE file
+ 		 <set> 
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.fileName != null">
+				 file_name = #{bean.fileName},
+			</if>
+			<if test="bean.filePath != null">
+				 file_path = #{bean.filePath},
+			</if>
+			<if test="bean.fileType != null">
+				 file_type = #{bean.fileType},
+			</if>
+			<if test="bean.fileSize != null">
+				 file_size = #{bean.fileSize},
+			</if>
+			<if test="bean.fileHash != null">
+				 file_hash = #{bean.fileHash},
+			</if>
+			<if test="bean.isDeleted != null">
+				 is_deleted = #{bean.isDeleted},
+			</if>
+			<if test="bean.createdTime != null">
+				 created_time = #{bean.createdTime},
+			</if>
+			<if test="bean.updatedTime != null">
+				 updated_time = #{bean.updatedTime},
+			</if>
+ 		 </set>
+ 		 where file_id=#{fileId}
+	</update>
+
+	<!-- 根据FileId删除-->
+	<delete id="deleteByFileId">
+		delete from file where file_id=#{fileId}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByFileId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from file f where file_id=#{fileId}
+	</select>
+
+</mapper>

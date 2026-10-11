@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.evernight.base.mapper.ForumCommentMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="com.evernight.base.entity.po.ForumComment">
+		<!--评论ID-->
+		<id column="comment_id" property="commentId"  />
+		<!--帖子ID-->
+		<result column="post_id" property="postId"  />
+		<!--评论用户ID-->
+		<result column="user_id" property="userId"  />
+		<!--评论内容(限500字)-->
+		<result column="content" property="content"  />
+		<!--创建时间-->
+		<result column="created_time" property="createdTime"  />
+	</resultMap>
+
+	<!--评论列表结果映射（含评论用户名）-->
+	<resultMap id="list_with_username_result_map" type="com.evernight.base.entity.po.ForumComment" extends="base_result_map">
+		<!--评论用户名-->
+		<result column="username" property="username"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 f.comment_id,f.post_id,f.user_id,f.content,f.created_time
+		 
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.commentId != null">
+				 and  f.comment_id = #{query.commentId}
+			</if>
+			<if test="query.postId != null">
+				 and  f.post_id = #{query.postId}
+			</if>
+			<if test="query.userId != null">
+				 and  f.user_id = #{query.userId}
+			</if>
+			<if test="query.content != null and query.content!=''">
+				 and  f.content = #{query.content}
+			</if>
+			<if test="query.createdTime != null">
+				 and  f.created_time = #{query.createdTime}
+			</if>
+	</sql>
+	<!-- 通用条件列-->
+	<sql id="base_condition">
+	 <where>
+		 <include refid="base_condition_filed" />
+	 </where>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.contentFuzzy!= null  and query.contentFuzzy!=''">
+				 and  f.content like concat('%', #{query.contentFuzzy}, '%')
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM forum_comment f <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM forum_comment f <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="com.evernight.base.entity.po.ForumComment">
+		<selectKey keyProperty="bean.commentId" resultType="Integer" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		 INSERT INTO forum_comment
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.postId != null">
+				 post_id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.content != null">
+				 content,
+			</if>
+			<if test="bean.createdTime != null">
+				 created_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.postId!=null">
+				 #{bean.postId},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.content!=null">
+				 #{bean.content},
+			</if>
+			<if test="bean.createdTime!=null">
+				 #{bean.createdTime},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="com.evernight.base.entity.po.ForumComment">
+		 INSERT INTO forum_comment
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.commentId != null">
+				 comment_id,
+			</if>
+			<if test="bean.postId != null">
+				 post_id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.content != null">
+				 content,
+			</if>
+			<if test="bean.createdTime != null">
+				 created_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.commentId!=null">
+				 #{bean.commentId},
+			</if>
+			<if test="bean.postId!=null">
+				 #{bean.postId},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.content!=null">
+				 #{bean.content},
+			</if>
+			<if test="bean.createdTime!=null">
+				 #{bean.createdTime},
+			</if>
+		 </trim>
+		 on DUPLICATE key update 
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.postId!=null">
+				 post_id = VALUES(post_id),
+			</if>
+			<if test="bean.userId!=null">
+				 user_id = VALUES(user_id),
+			</if>
+			<if test="bean.content!=null">
+				 content = VALUES(content),
+			</if>
+			<if test="bean.createdTime!=null">
+				 created_time = VALUES(created_time),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="com.evernight.base.entity.po.ForumComment" useGeneratedKeys="true" keyProperty="commentId">
+		 INSERT INTO forum_comment(
+			 post_id,
+			 user_id,
+			 content,
+			 created_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.postId},
+				 #{item.userId},
+				 #{item.content},
+				 #{item.createdTime}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="com.evernight.base.entity.po.ForumComment">
+		 INSERT INTO forum_comment(
+			 post_id,
+			 user_id,
+			 content,
+			 created_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.postId},
+				 #{item.userId},
+				 #{item.content},
+				 #{item.createdTime}
+			 )
+		 </foreach>
+			on DUPLICATE key update 
+			post_id = VALUES(post_id),
+			user_id = VALUES(user_id),
+			content = VALUES(content),
+			created_time = VALUES(created_time)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="com.evernight.base.entity.query.ForumCommentQuery">
+		 UPDATE forum_comment f
+ 		 <set> 
+			<if test="bean.postId != null">
+				 post_id = #{bean.postId},
+			</if>
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.content != null">
+				 content = #{bean.content},
+			</if>
+			<if test="bean.createdTime != null">
+				 created_time = #{bean.createdTime},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete f from forum_comment f
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据CommentId修改-->
+	<update id="updateByCommentId" parameterType="com.evernight.base.entity.po.ForumComment">
+		 UPDATE forum_comment
+ 		 <set> 
+			<if test="bean.postId != null">
+				 post_id = #{bean.postId},
+			</if>
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.content != null">
+				 content = #{bean.content},
+			</if>
+			<if test="bean.createdTime != null">
+				 created_time = #{bean.createdTime},
+			</if>
+ 		 </set>
+ 		 where comment_id=#{commentId}
+	</update>
+
+	<!-- 根据CommentId删除-->
+	<delete id="deleteByCommentId">
+		delete from forum_comment where comment_id=#{commentId}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByCommentId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from forum_comment f where comment_id=#{commentId}
+	</select>
+
+	<!-- 查询评论列表（含评论用户名） -->
+	<select id="selectListWithUsername" resultMap="list_with_username_result_map" >
+		SELECT <include refid="base_column_list" />,
+			   u.username
+		FROM forum_comment f
+		LEFT JOIN user u ON f.user_id = u.user_id
+		<include refid="query_condition" />
+		<if test="query.orderBy!=null">
+			order by ${query.orderBy}
+		</if>
+		<if test="query.simplePage!=null">
+			limit #{query.simplePage.start},#{query.simplePage.end}
+		</if>
+	</select>
+
+</mapper>

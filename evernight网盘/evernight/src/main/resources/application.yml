@@ -1,0 +1,117 @@
+# 服务器配置
+server:
+  port: 9092 # 服务器端口号
+
+# Spring 相关配置
+spring:
+  servlet:
+    multipart:
+      max-file-size: 15MB # 单个文件的最大大小
+      max-request-size: 20MB # 整个请求的最大大小
+  application:
+    name: evernight # 应用名称
+
+  # mysql 配置
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3307/evernight?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&autoReconnect=true&allowPublicKeyRetrieval=true&useSSL=false # 数据库连接 URL
+    username: root # 数据库用户名
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver # 数据库驱动类
+
+  # Redis 配置
+  data:
+    redis:
+      database: 0
+      host: 127.0.0.1
+      port: 6379
+      timeout: 2000
+      # 自定义配置
+      consumer:
+        base-project-name: "evernight:"
+        system-setting:
+          captcha:
+            key: "captcha:" # 验证码的 key
+            timeout: 60 # 1分钟
+            email-timeout: 300 # 5分钟
+          user-session:
+            key: "user:session:" # 用户会话的 key
+            timeout: 86400 # 1天
+          user-traffic:
+            key: "user:traffic:" # 用户当天流量限制的 key
+            timeout: 86400 # 1天
+            max-traffic: 5368709120 # 5G
+          user-fileList:
+            key: "file:fileList:" # 用户文件列表的 key
+            timeout: 86400 # 1天
+          file-share:
+            key: "file:share:"
+          file-chunkUpload:
+            key: "file:chunkFile:" # 分片上传的 key
+            timeout: 86400 # 1天
+          file-forum-post:
+            key: "file:forumPost:" # 帖子文件的 key
+            timeout: 86400 # 1天
+
+
+  # qq邮件配置
+  mail:
+    host: smtp.qq.com
+    port: 587  # 或 465（对应不同加密方式）
+    username: {your_qq_email}  # 你的QQ邮箱
+    password: tttxxxwww  # 邮箱授权码（不是QQ密码！）
+    protocol: smtp
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true  # TLS加密（587端口）
+            required: true
+
+
+# MyBatis 配置
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true # 是否将数据库字段的下划线命名映射为 Java 对象的驼峰命名
+
+
+# 日志配置
+log:
+  root:
+    level: debug # 日志级别
+  project:
+    folder: ./logs
+
+
+# 阿里云配置
+aliyun:
+  oss:
+    endpoint: https://oss-cn-hangzhou.aliyuncs.com       # OSS访问端点
+    accessKeyId: {your_accessKeyId}                 # 访问密钥ID
+    accessKeySecret: {your_accessKeySecret}       # 访问密钥
+    bucketName:    {your_bucketName}                             # 存储桶名称
+    domain: http://localhost:9092                        # 代理服务器域名
+    domainSecretKey: N045E6Bv9r143wCw                    # 地址加密密钥
+
+
+# 文件存储配置
+file:
+  aliOss:
+    base-project-name: "evernight/"
+    user-avatar: "evernight/avatar/"
+    user-file: "evernight/file/"
+    forum-post: "evernight/forum/post/"  # 帖子MD内容存储路径
+    forum-post-cover: "evernight/forum/postCover/"  # 帖子封面存储路径
+    forum-post-image: "evernight/forum/postImage/"  # 帖子图片存储路径
+    share-file-limit-seconds: 2592000 # 分享文件有效期 最高30天
+    share-file-limit-count: 20 # 分享文件次数限制
+    max-file-size: 2147483648  # 最大文件大小限制，2G
+    chunk-size: 5242880 # 单个分片大小，5M
+    download-chunk-threshold: 10485760 # 断点续传阈值，10MB
+    download-chunk-size: 5242880 # 推荐下载分片大小，5MB
+
+
+# jwt 配置
+jwt:
+  secret: HomewardYouComeDistantWind_Cifera      # jwt 密钥
+  expiration: 86400                       # token 过期时间, 单位秒 86400 = 1天

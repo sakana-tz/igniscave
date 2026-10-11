@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>邮箱验证码</title>
+    <style>
+        /* 全局样式重置 */
+        body, table, td, div, p, a, span {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            font-size: 100%;
+            font: inherit;
+            vertical-align: baseline;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 20px 0;
+        }
+
+        /* 容器样式 */
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 头部样式 */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px 20px;
+            text-align: center;
+            color: white;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #667eea;
+        }
+
+        .logo-text {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        /* 主体内容 */
+        .content {
+            padding: 40px 30px;
+        }
+
+        .greeting {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+
+        .message {
+            font-size: 16px;
+            color: #555555;
+            line-height: 1.8;
+            margin-bottom: 30px;
+        }
+
+        /* 验证码容器 */
+        .captcha-container {
+            background: linear-gradient(135deg, #f8f9ff 0%, #eef1ff 100%);
+            border: 2px dashed #667eea;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            margin: 30px 0;
+            position: relative;
+        }
+
+        .captcha-label {
+            font-size: 14px;
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .captcha-code {
+            font-size: 36px;
+            font-weight: bold;
+            color: #2c3e50;
+            letter-spacing: 8px;
+            font-family: 'Courier New', monospace;
+            background: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+            margin: 10px 0;
+        }
+
+        .captcha-warning {
+            font-size: 13px;
+            color: #e74c3c;
+            margin-top: 15px;
+            font-weight: 500;
+        }
+
+        /* 时间提醒 */
+        .time-info {
+            background-color: #fff8e1;
+            border-left: 4px solid #ffc107;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .time-info strong {
+            color: #e65100;
+        }
+
+        /* 安全提醒 */
+        .security-note {
+            background-color: #e8f5e8;
+            border-left: 4px solid #4caf50;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .security-note strong {
+            color: #2e7d32;
+        }
+
+        /* 按钮样式 */
+        .action-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-weight: 600;
+            margin: 20px 0;
+            transition: transform 0.3s ease;
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        /* 底部样式 */
+        .footer {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 25px 30px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .footer-links {
+            margin-top: 15px;
+        }
+
+        .footer-links a {
+            color: #3498db;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 13px;
+        }
+
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* 响应式设计 */
+        @media screen and (max-width: 600px) {
+            .email-container {
+                margin: 10px;
+                border-radius: 8px;
+            }
+
+            .content {
+                padding: 25px 20px;
+            }
+
+            .captcha-code {
+                font-size: 28px;
+                letter-spacing: 5px;
+                padding: 12px 20px;
+            }
+
+            .header {
+                padding: 20px 15px;
+            }
+
+            .logo {
+                font-size: 24px;
+            }
+
+            .logo-icon {
+                width: 30px;
+                height: 30px;
+            }
+        }
+
+        /* 分隔线 */
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #667eea, transparent);
+            margin: 25px 0;
+        }
+
+        /* Logo 图片样式 */
+        .logo-img {
+            width: 42px;
+            height: 42px;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+<div class="email-container">
+    <!-- 邮件头部 -->
+    <div class="header">
+        <div class="logo">
+            <img src="data:image/png;base64,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" alt="Logo" class="logo-img">
+            <span class="logo-text">Evernight</span>
+        </div>
+        <div class="subtitle">您的安全云存储平台</div>
+    </div>
+
+    <!-- 邮件主体内容 -->
+    <div class="content">
+        <h1 class="greeting">您好！</h1>
+
+        <p class="message">
+            您正在请求获取邮箱验证码，以下是您需要的验证码信息。
+            请在注册或登录过程中输入此验证码以完成身份验证。
+        </p>
+
+        <!-- 验证码展示区域 -->
+        <div class="captcha-container">
+            <div class="captcha-label">您的验证码是：</div>
+            <div class="captcha-code">{captcha_code}</div>
+            <div class="captcha-warning">⚠️ 验证码将在5分钟后失效，请及时使用</div>
+        </div>
+
+        <!-- 时间提醒 -->
+        <div class="time-info">
+            <strong>重要提醒：</strong> 此验证码有效期为5分钟，请尽快使用。
+            如果您没有进行相关操作，请忽略此邮件。
+        </div>
+
+        <!-- 安全提醒 -->
+        <div class="security-note">
+            <strong>安全提示：</strong> 请勿将此验证码告知他人。
+            我们的工作人员不会主动索要验证码，请注意防范诈骗。
+        </div>
+
+        <div class="divider"></div>
+
+        <p class="message">
+            感谢您选择Evernight服务！
+        </p>
+
+        <div style="text-align: center;">
+            <a href="http://118.31.21.204/evernight/" class="action-button">访问云盘</a>
+        </div>
+    </div>
+
+    <!-- 邮件底部 -->
+    <div class="footer">
+        <p>&copy; Evernight. 保留所有权利。</p>
+        <div class="footer-links">
+            <a href="#">隐私政策</a>
+            <a href="#">服务条款</a>
+            <a href="#">联系我们</a>
+        </div>
+        <p style="margin-top: 15px; font-size: 12px; opacity: 0.8;">
+            此邮件为系统自动发送，请勿直接回复
+        </p>
+    </div>
+</div>
+</body>
+</html>
+
+
+

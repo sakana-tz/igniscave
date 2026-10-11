@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.evernight.base.mapper.UserMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="com.evernight.base.entity.po.User">
+		<!--用户ID-->
+		<id column="user_id" property="userId"  />
+		<!--用户名-->
+		<result column="username" property="username"  />
+		<!--加密密码(bcrypt)-->
+		<result column="password" property="password"  />
+		<!--邮箱-->
+		<result column="email" property="email"  />
+		<!--注册时间-->
+		<result column="created_time" property="createdTime"  />
+		<!--最后更新时间-->
+		<result column="updated_time" property="updatedTime"  />
+		<!--用户状态(0:管理员,1:禁用,2:普通用户)-->
+		<result column="user_status" property="userStatus"  />
+		<!--是否删除(0:正常,1:已删除)-->
+		<result column="is_deleted" property="isDeleted"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 u.user_id,u.username,u.password,u.email,u.created_time,
+		 u.updated_time,u.user_status,u.is_deleted
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.userId != null">
+				 and  u.user_id = #{query.userId}
+			</if>
+			<if test="query.username != null and query.username!=''">
+				 and  u.username = #{query.username}
+			</if>
+			<if test="query.password != null and query.password!=''">
+				 and  u.password = #{query.password}
+			</if>
+			<if test="query.email != null and query.email!=''">
+				 and  u.email = #{query.email}
+			</if>
+			<if test="query.createdTime != null">
+				 and  u.created_time = #{query.createdTime}
+			</if>
+			<if test="query.updatedTime != null">
+				 and  u.updated_time = #{query.updatedTime}
+			</if>
+			<if test="query.userStatus != null">
+				 and  u.user_status = #{query.userStatus}
+			</if>
+			<if test="query.isDeleted != null">
+				 and  u.is_deleted = #{query.isDeleted}
+			</if>
+	</sql>
+	<!-- 通用条件列-->
+	<sql id="base_condition">
+	 <where>
+		 <include refid="base_condition_filed" />
+	 </where>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.usernameFuzzy!= null  and query.usernameFuzzy!=''">
+				 and  u.username like concat('%', #{query.usernameFuzzy}, '%')
+			</if>
+			<if test="query.passwordFuzzy!= null  and query.passwordFuzzy!=''">
+				 and  u.password like concat('%', #{query.passwordFuzzy}, '%')
+			</if>
+			<if test="query.emailFuzzy!= null  and query.emailFuzzy!=''">
+				 and  u.email like concat('%', #{query.emailFuzzy}, '%')
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM user u <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM user u <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="com.evernight.base.entity.po.User">
+		<selectKey keyProperty="bean.userId" resultType="Integer" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		 INSERT INTO user
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.username != null">
+				 username,
+			</if>
+			<if test="bean.password != null">
+				 password,
+			</if>
+			<if test="bean.email != null">
+				 email,
+			</if>
+			<if test="bean.createdTime != null">
+				 created_time,
+			</if>
+			<if test="bean.updatedTime != null">
+				 updated_time,
+			</if>
+			<if test="bean.userStatus != null">
+				 user_status,
+			</if>
+			<if test="bean.isDeleted != null">
+				 is_deleted,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.username!=null">
+				 #{bean.username},
+			</if>
+			<if test="bean.password!=null">
+				 #{bean.password},
+			</if>
+			<if test="bean.email!=null">
+				 #{bean.email},
+			</if>
+			<if test="bean.createdTime!=null">
+				 #{bean.createdTime},
+			</if>
+			<if test="bean.updatedTime!=null">
+				 #{bean.updatedTime},
+			</if>
+			<if test="bean.userStatus!=null">
+				 #{bean.userStatus},
+			</if>
+			<if test="bean.isDeleted!=null">
+				 #{bean.isDeleted},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="com.evernight.base.entity.po.User">
+		 INSERT INTO user
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.username != null">
+				 username,
+			</if>
+			<if test="bean.password != null">
+				 password,
+			</if>
+			<if test="bean.email != null">
+				 email,
+			</if>
+			<if test="bean.createdTime != null">
+				 created_time,
+			</if>
+			<if test="bean.updatedTime != null">
+				 updated_time,
+			</if>
+			<if test="bean.userStatus != null">
+				 user_status,
+			</if>
+			<if test="bean.isDeleted != null">
+				 is_deleted,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.username!=null">
+				 #{bean.username},
+			</if>
+			<if test="bean.password!=null">
+				 #{bean.password},
+			</if>
+			<if test="bean.email!=null">
+				 #{bean.email},
+			</if>
+			<if test="bean.createdTime!=null">
+				 #{bean.createdTime},
+			</if>
+			<if test="bean.updatedTime!=null">
+				 #{bean.updatedTime},
+			</if>
+			<if test="bean.userStatus!=null">
+				 #{bean.userStatus},
+			</if>
+			<if test="bean.isDeleted!=null">
+				 #{bean.isDeleted},
+			</if>
+		 </trim>
+		 on DUPLICATE key update 
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.username!=null">
+				 username = VALUES(username),
+			</if>
+			<if test="bean.password!=null">
+				 password = VALUES(password),
+			</if>
+			<if test="bean.email!=null">
+				 email = VALUES(email),
+			</if>
+			<if test="bean.createdTime!=null">
+				 created_time = VALUES(created_time),
+			</if>
+			<if test="bean.updatedTime!=null">
+				 updated_time = VALUES(updated_time),
+			</if>
+			<if test="bean.userStatus!=null">
+				 user_status = VALUES(user_status),
+			</if>
+			<if test="bean.isDeleted!=null">
+				 is_deleted = VALUES(is_deleted),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="com.evernight.base.entity.po.User" useGeneratedKeys="true" keyProperty="userId">
+		 INSERT INTO user(
+			 username,
+			 password,
+			 email,
+			 created_time,
+			 updated_time,
+			 user_status,
+			 is_deleted
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.username},
+				 #{item.password},
+				 #{item.email},
+				 #{item.createdTime},
+				 #{item.updatedTime},
+				 #{item.userStatus},
+				 #{item.isDeleted}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="com.evernight.base.entity.po.User">
+		 INSERT INTO user(
+			 username,
+			 password,
+			 email,
+			 created_time,
+			 updated_time,
+			 user_status,
+			 is_deleted
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.username},
+				 #{item.password},
+				 #{item.email},
+				 #{item.createdTime},
+				 #{item.updatedTime},
+				 #{item.userStatus},
+				 #{item.isDeleted}
+			 )
+		 </foreach>
+			on DUPLICATE key update 
+			username = VALUES(username),
+			password = VALUES(password),
+			email = VALUES(email),
+			created_time = VALUES(created_time),
+			updated_time = VALUES(updated_time),
+			user_status = VALUES(user_status),
+			is_deleted = VALUES(is_deleted)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="com.evernight.base.entity.query.UserQuery">
+		 UPDATE user u
+ 		 <set> 
+			<if test="bean.username != null">
+				 username = #{bean.username},
+			</if>
+			<if test="bean.password != null">
+				 password = #{bean.password},
+			</if>
+			<if test="bean.email != null">
+				 email = #{bean.email},
+			</if>
+			<if test="bean.createdTime != null">
+				 created_time = #{bean.createdTime},
+			</if>
+			<if test="bean.updatedTime != null">
+				 updated_time = #{bean.updatedTime},
+			</if>
+			<if test="bean.userStatus != null">
+				 user_status = #{bean.userStatus},
+			</if>
+			<if test="bean.isDeleted != null">
+				 is_deleted = #{bean.isDeleted},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete u from user u
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据UserId修改-->
+	<update id="updateByUserId" parameterType="com.evernight.base.entity.po.User">
+		 UPDATE user
+ 		 <set> 
+			<if test="bean.username != null">
+				 username = #{bean.username},
+			</if>
+			<if test="bean.password != null">
+				 password = #{bean.password},
+			</if>
+			<if test="bean.email != null">
+				 email = #{bean.email},
+			</if>
+			<if test="bean.createdTime != null">
+				 created_time = #{bean.createdTime},
+			</if>
+			<if test="bean.updatedTime != null">
+				 updated_time = #{bean.updatedTime},
+			</if>
+			<if test="bean.userStatus != null">
+				 user_status = #{bean.userStatus},
+			</if>
+			<if test="bean.isDeleted != null">
+				 is_deleted = #{bean.isDeleted},
+			</if>
+ 		 </set>
+ 		 where user_id=#{userId}
+	</update>
+
+	<!-- 根据UserId删除-->
+	<delete id="deleteByUserId">
+		delete from user where user_id=#{userId}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByUserId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from user u where user_id=#{userId}
+	</select>
+
+	<!-- 根据Email修改-->
+	<update id="updateByEmail" parameterType="com.evernight.base.entity.po.User">
+		 UPDATE user
+ 		 <set> 
+			<if test="bean.username != null">
+				 username = #{bean.username},
+			</if>
+			<if test="bean.password != null">
+				 password = #{bean.password},
+			</if>
+			<if test="bean.createdTime != null">
+				 created_time = #{bean.createdTime},
+			</if>
+			<if test="bean.updatedTime != null">
+				 updated_time = #{bean.updatedTime},
+			</if>
+			<if test="bean.userStatus != null">
+				 user_status = #{bean.userStatus},
+			</if>
+			<if test="bean.isDeleted != null">
+				 is_deleted = #{bean.isDeleted},
+			</if>
+ 		 </set>
+ 		 where email=#{email}
+	</update>
+
+	<!-- 根据Email删除-->
+	<delete id="deleteByEmail">
+		delete from user where email=#{email}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByEmail" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from user u where email=#{email}
+	</select>
+
+</mapper>

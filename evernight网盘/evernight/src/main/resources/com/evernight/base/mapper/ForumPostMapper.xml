@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.evernight.base.mapper.ForumPostMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="com.evernight.base.entity.po.ForumPost">
+		<!--帖子ID-->
+		<id column="post_id" property="postId"  />
+		<!--发帖用户ID-->
+		<result column="user_id" property="userId"  />
+		<!--标题-->
+		<result column="title" property="title"  />
+		<!--浏览数-->
+		<result column="view_count" property="viewCount"  />
+		<!--帖子状态(0:草稿,1:发布)-->
+		<result column="post_status" property="postStatus"  />
+		<!--最后更新时间-->
+		<result column="updated_time" property="updatedTime"  />
+	</resultMap>
+
+	<!--详情结果映射（含评论数和发帖用户名）-->
+	<resultMap id="detail_result_map" type="com.evernight.base.entity.po.ForumPost" extends="base_result_map">
+		<!--评论数-->
+		<result column="comment_count" property="commentCount"  />
+		<!--发帖用户名-->
+		<result column="username" property="username"  />
+	</resultMap>
+
+	<!--热门帖子结果映射（含发帖用户名和评论数）-->
+	<resultMap id="hot_post_result_map" type="com.evernight.entity.dto.HotPostDto">
+		<!--帖子ID-->
+		<id column="post_id" property="postId"  />
+		<!--发帖用户ID-->
+		<result column="user_id" property="userId"  />
+		<!--发帖用户名-->
+		<result column="username" property="username"  />
+		<!--标题-->
+		<result column="title" property="title"  />
+		<!--浏览数-->
+		<result column="view_count" property="viewCount"  />
+		<!--评论数-->
+		<result column="comment_count" property="commentCount"  />
+		<!--帖子状态(0:草稿,1:发布)-->
+		<result column="post_status" property="postStatus"  />
+		<!--最后更新时间-->
+		<result column="updated_time" property="updatedTime"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 f.post_id,f.user_id,f.title,f.view_count,f.post_status,
+		 f.updated_time
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.postId != null">
+				 and  f.post_id = #{query.postId}
+			</if>
+			<if test="query.userId != null">
+				 and  f.user_id = #{query.userId}
+			</if>
+			<if test="query.title != null and query.title!=''">
+				 and  f.title = #{query.title}
+			</if>
+			<if test="query.viewCount != null">
+				 and  f.view_count = #{query.viewCount}
+			</if>
+			<if test="query.postStatus != null">
+				 and  f.post_status = #{query.postStatus}
+			</if>
+			<if test="query.updatedTime != null">
+				 and  f.updated_time = #{query.updatedTime}
+			</if>
+	</sql>
+	<!-- 通用条件列-->
+	<sql id="base_condition">
+	 <where>
+		 <include refid="base_condition_filed" />
+	 </where>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.titleFuzzy!= null  and query.titleFuzzy!=''">
+				 and  f.title like concat('%', #{query.titleFuzzy}, '%')
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM forum_post f <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM forum_post f <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="com.evernight.base.entity.po.ForumPost">
+		<selectKey keyProperty="bean.postId" resultType="Integer" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		 INSERT INTO forum_post
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.title != null">
+				 title,
+			</if>
+			<if test="bean.viewCount != null">
+				 view_count,
+			</if>
+			<if test="bean.postStatus != null">
+				 post_status,
+			</if>
+			<if test="bean.updatedTime != null">
+				 updated_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.title!=null">
+				 #{bean.title},
+			</if>
+			<if test="bean.viewCount!=null">
+				 #{bean.viewCount},
+			</if>
+			<if test="bean.postStatus!=null">
+				 #{bean.postStatus},
+			</if>
+			<if test="bean.updatedTime!=null">
+				 #{bean.updatedTime},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="com.evernight.base.entity.po.ForumPost">
+		 INSERT INTO forum_post
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.postId != null">
+				 post_id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.title != null">
+				 title,
+			</if>
+			<if test="bean.viewCount != null">
+				 view_count,
+			</if>
+			<if test="bean.postStatus != null">
+				 post_status,
+			</if>
+			<if test="bean.updatedTime != null">
+				 updated_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.postId!=null">
+				 #{bean.postId},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.title!=null">
+				 #{bean.title},
+			</if>
+			<if test="bean.viewCount!=null">
+				 #{bean.viewCount},
+			</if>
+			<if test="bean.postStatus!=null">
+				 #{bean.postStatus},
+			</if>
+			<if test="bean.updatedTime!=null">
+				 #{bean.updatedTime},
+			</if>
+		 </trim>
+		 on DUPLICATE key update 
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.userId!=null">
+				 user_id = VALUES(user_id),
+			</if>
+			<if test="bean.title!=null">
+				 title = VALUES(title),
+			</if>
+			<if test="bean.viewCount!=null">
+				 view_count = VALUES(view_count),
+			</if>
+			<if test="bean.postStatus!=null">
+				 post_status = VALUES(post_status),
+			</if>
+			<if test="bean.updatedTime!=null">
+				 updated_time = VALUES(updated_time),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="com.evernight.base.entity.po.ForumPost" useGeneratedKeys="true" keyProperty="postId">
+		 INSERT INTO forum_post(
+			 user_id,
+			 title,
+			 view_count,
+			 post_status,
+			 updated_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.userId},
+				 #{item.title},
+				 #{item.viewCount},
+				 #{item.postStatus},
+				 #{item.updatedTime}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="com.evernight.base.entity.po.ForumPost">
+		 INSERT INTO forum_post(
+			 user_id,
+			 title,
+			 view_count,
+			 post_status,
+			 updated_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.userId},
+				 #{item.title},
+				 #{item.viewCount},
+				 #{item.postStatus},
+				 #{item.updatedTime}
+			 )
+		 </foreach>
+			on DUPLICATE key update 
+			user_id = VALUES(user_id),
+			title = VALUES(title),
+			view_count = VALUES(view_count),
+			post_status = VALUES(post_status),
+			updated_time = VALUES(updated_time)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="com.evernight.base.entity.query.ForumPostQuery">
+		 UPDATE forum_post f
+ 		 <set> 
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.title != null">
+				 title = #{bean.title},
+			</if>
+			<if test="bean.viewCount != null">
+				 view_count = #{bean.viewCount},
+			</if>
+			<if test="bean.postStatus != null">
+				 post_status = #{bean.postStatus},
+			</if>
+			<if test="bean.updatedTime != null">
+				 updated_time = #{bean.updatedTime},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete f from forum_post f
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据PostId修改-->
+	<update id="updateByPostId" parameterType="com.evernight.base.entity.po.ForumPost">
+		 UPDATE forum_post
+ 		 <set> 
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.title != null">
+				 title = #{bean.title},
+			</if>
+			<if test="bean.viewCount != null">
+				 view_count = #{bean.viewCount},
+			</if>
+			<if test="bean.postStatus != null">
+				 post_status = #{bean.postStatus},
+			</if>
+			<if test="bean.updatedTime != null">
+				 updated_time = #{bean.updatedTime},
+			</if>
+ 		 </set>
+ 		 where post_id=#{postId}
+	</update>
+
+	<!-- 根据PostId删除-->
+	<delete id="deleteByPostId">
+		delete from forum_post where post_id=#{postId}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByPostId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from forum_post f where post_id=#{postId}
+	</select>
+
+	<!-- 根据PrimaryKey获取帖子详情（含评论数和发帖用户名）-->
+	<select id="selectDetailByPostId" resultMap="detail_result_map" >
+		select <include refid="base_column_list" />,
+			   u.username,
+			   (select count(1) from forum_comment c where c.post_id = f.post_id) as comment_count
+		from forum_post f
+		left join user u on f.user_id = u.user_id
+		where f.post_id=#{postId}
+	</select>
+
+	<!--帖子列表结果映射（含评论数和发帖用户名）-->
+	<resultMap id="list_with_username_result_map" type="com.evernight.base.entity.po.ForumPost" extends="detail_result_map" />
+
+	<!-- 查询帖子列表（含发帖用户名和评论数） -->
+	<select id="selectListWithUsername" resultMap="list_with_username_result_map" >
+		SELECT <include refid="base_column_list" />,
+			   u.username,
+			   (SELECT COUNT(1) FROM forum_comment c WHERE c.post_id = f.post_id) AS comment_count
+		FROM forum_post f
+		LEFT JOIN user u ON f.user_id = u.user_id
+		<include refid="query_condition" />
+		<if test="query.orderBy!=null">
+			order by ${query.orderBy}
+		</if>
+		<if test="query.simplePage!=null">
+			limit #{query.simplePage.start},#{query.simplePage.end}
+		</if>
+	</select>
+
+	<!-- 查询浏览量前10的热门帖子（含发帖用户名和评论数） -->
+	<select id="selectHotPosts" resultMap="hot_post_result_map" >
+		select f.post_id, f.user_id, u.username, f.title, f.view_count,
+			   (select count(1) from forum_comment c where c.post_id = f.post_id) as comment_count,
+			   f.post_status, f.updated_time
+		from forum_post f
+		left join user u on f.user_id = u.user_id
+		where f.post_status = 1
+		order by f.view_count desc
+		limit 10
+	</select>
+
+</mapper>

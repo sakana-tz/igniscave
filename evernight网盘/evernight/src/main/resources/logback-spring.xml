@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration scan="true" scanPeriod="10 minutes">
+    <!-- 控制台日志输出 -->
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <!-- 日志格式说明：
+                 %d{...}   带时区的日期时间（北京时间）
+                 [%p]      日志级别
+                 [%c]      日志所属类
+                 [%M]      方法名（可能影响性能）
+                 [%L]      行号（可能影响性能）
+                 %m        日志信息
+                 %n        换行
+            -->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss, GMT+8} [%p][%c][%M][%L]-> %m%n</pattern>
+        </layout>
+    </appender>
+
+    <!-- 从 Spring 环境获取的配置属性 -->
+    <springProperty scope="context" name="log.path" source="log.project.folder"/>
+    <springProperty scope="context" name="log.root.level" source="log.root.level"/>
+    <springProperty scope="context" name="appname" source="spring.application.name"/>
+
+    <!-- 本地定义的日志目录 -->
+    <property name="LOG_FOLDER" value="logs"/>
+
+    <!-- 文件日志输出（按时间和大小滚动） -->
+    <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${log.path}/${LOG_FOLDER}/${appname}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- 滚动文件命名模式：
+                 ${appName}         应用名称
+                 %d{yyyyMMdd}       日期格式
+                 %i                 滚动索引（同一天内按大小滚动的序号）
+                 .log              统一文件扩展名
+            -->
+            <FileNamePattern>${log.path}/${LOG_FOLDER}/${appname}.%d{yyyyMMdd}.%i.log</FileNamePattern>
+            <!-- 最大单个文件尺寸 -->
+            <MaxFileSize>20MB</MaxFileSize>
+            <!-- 保留最近42天日志 -->
+            <maxHistory>42</maxHistory>
+            <!-- 启动时清理过期日志 -->
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
+            <!-- 可选：总大小限制（示例配置）
+            <totalSizeCap>1GB</totalSizeCap>-->
+        </rollingPolicy>
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss, GMT+8} [%p][%c][%M][%L]-> %m%n</pattern>
+        </encoder>
+        <!-- 是否追加到现有文件（false表示每次启动清空文件） -->
+        <append>false</append>
+        <!-- 安全写入模式（多进程写同一文件时需要true，建议保持false） -->
+        <prudent>false</prudent>
+    </appender>
+
+    <!-- 特定类/包的日志级别配置 -->
+    <!-- 抑制 Spring Boot 启动条件报告 -->
+    <logger name="org.springframework.boot.autoconfigure.logging.ConditionEvaluationReportLoggingListener"
+            level="ERROR"/>
+    <!-- 抑制 Redisson DNS 监控日志 -->
+    <logger name="org.redisson.connection.DNSMonitor" level="ERROR"/>
+    <!-- 数据库连接池日志级别控制 -->
+    <logger name="com.zaxxer.hikari" level="INFO"/>
+    <!-- Redis 客户端日志级别控制 -->
+    <logger name="io.lettuce.core" level="INFO"/>
+    <logger name="org.springframework.data.redis" level="INFO"/>
+
+    <!-- 根日志配置 -->
+    <root level="${log.root.level}">
+        <appender-ref ref="console"/>
+        <appender-ref ref="file"/>
+    </root>
+</configuration>
+
+<!-- 你只需要在yml中添加:
+
+spring:
+  application:
+    name: ignisCave-web # 应用名称
+
+# 日志配置
+log:
+  root:
+    level: debug # 日志级别
+  project:
+    folder: ./ # 日志存储路径
+
+  -->
